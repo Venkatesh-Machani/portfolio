@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Venkatesh Portfolio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #13161e;
+      --card: #1a1e2a;
+      --border: #252b3b;
+      --accent: #4f9cf9;
+      --accent2: #7b5ea7;
+      --gold: #e2b96f;
+      --text: #e8eaf0;
+      --muted: #8892a4;
+      --heading-font: 'Playfair Display', serif;
+      --body-font: 'DM Sans', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    section { scroll-margin-top: 58px; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body-font);
+      font-size: 16px;
+      line-height: 1.7;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── 3D CANVAS BACKGROUND ── */
+    #bg-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── NOISE TEXTURE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.5;
+    }
+
+    /* ── HEADER (STATIC — no scroll animation) ── */
+    header {
+      position: relative;
+      text-align: center;
+      padding: 80px 24px 60px;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(79,156,249,0.15) 0%, transparent 70%),
+                  radial-gradient(ellipse 50% 40% at 80% 100%, rgba(123,94,167,0.12) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .header-icon {
+      width: 56px; height: 56px;
+      margin: 0 auto 16px;
+      display: block;
+      filter: drop-shadow(0 0 12px rgba(79,156,249,0.6));
+      animation: floatIcon 4s ease-in-out infinite;
+    }
+
+    @keyframes floatIcon {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-8px); }
+    }
+
+    header h1 {
+      font-family: var(--heading-font);
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #e8eaf0 0%, #4f9cf9 50%, #7b5ea7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .tagline {
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 300;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,15,20,0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    nav ul li a {
+      display: block;
+      padding: 14px 18px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: color 0.25s, border-bottom 0.25s;
+      border-bottom: 2px solid transparent;
+    }
+
+    nav ul li a:hover {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* ── SCROLL REVEAL SECTIONS ── */
+    /* Each section starts invisible and slightly pushed down/scaled */
+    .reveal-section {
+      opacity: 0;
+      transform: translateY(60px) scale(0.97);
+      transition: opacity 0.65s cubic-bezier(0.22,1,0.36,1),
+                  transform 0.65s cubic-bezier(0.22,1,0.36,1);
+      margin-bottom: 60px;
+      position: relative;
+    }
+
+    /* When entering view: slide in from front */
+    .reveal-section.in-view {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* When leaving view upward (scrolled past): push back into distance */
+    .reveal-section.exit-back {
+      opacity: 0;
+      transform: translateY(-40px) scale(0.95);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+    }
+
+    /* ── SECTION HEADINGS ── */
+    h2 {
+      font-family: var(--heading-font);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h2 .section-icon {
+      width: 22px; height: 22px;
+      opacity: 0.85;
+      flex-shrink: 0;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      border-color: rgba(79,156,249,0.35);
+      box-shadow: 0 0 30px rgba(79,156,249,0.07);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .card:hover::before { opacity: 1; }
+
+    /* ── OBJECTIVE ── */
+    #objective .card p {
+      color: var(--muted);
+      font-size: 0.97rem;
+      font-style: italic;
+      line-height: 1.8;
+    }
+
+    /* ── SKILLS ── */
+    .skills-grid { display: grid; gap: 14px; }
+
+    .skill-row {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-start;
+      transition: border-color 0.25s;
+    }
+
+    .skill-row:hover { border-color: rgba(79,156,249,0.3); }
+
+    .skill-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+      min-width: 160px;
+      padding-top: 2px;
+    }
+
+    .skill-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .tag {
+      background: rgba(79,156,249,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(79,156,249,0.25);
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .tag:hover { background: rgba(79,156,249,0.2); transform: translateY(-1px); }
+
+    /* ── INTERNSHIP ── */
+    .job-header {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .job-title { font-weight: 600; font-size: 1rem; color: var(--text); }
+
+    .job-company a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.05rem;
+      transition: opacity 0.2s;
+    }
+
+    .job-company a:hover { opacity: 0.75; text-decoration: underline; }
+
+    .job-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(226,185,111,0.1);
+      color: var(--gold);
+      border: 1px solid rgba(226,185,111,0.25);
+    }
+
+    ul.bullet-list {
+      padding-left: 20px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    ul.bullet-list li { margin-bottom: 8px; line-height: 1.65; }
+    ul.bullet-list li::marker { color: var(--accent); }
+
+    /* ── PROJECTS ── */
+    .project-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      margin-bottom: 20px;
+    }
+
+    .project-card:last-child { margin-bottom: 0; }
+
+    .project-card:hover {
+      border-color: rgba(79,156,249,0.35);
+      box-shadow: 0 0 30px rgba(79,156,249,0.07);
+    }
+
+    .project-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .project-card:hover::before { opacity: 1; }
+
+    .project-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .project-title {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--gold);
+      margin-bottom: 4px;
+    }
+
+    .project-subtitle {
+      font-size: 0.85rem;
+      color: var(--accent);
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    .project-tech-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .tech-tag {
+      background: rgba(123,94,167,0.12);
+      color: #a78fd4;
+      border: 1px solid rgba(123,94,167,0.3);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 0.74rem;
+      font-weight: 500;
+    }
+
+    .project-number {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(79,156,249,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(79,156,249,0.25);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* ── ACHIEVEMENTS ── */
+    .achievement-item { display: flex; gap: 14px; align-items: flex-start; }
+
+    .achievement-badge {
+      flex-shrink: 0;
+      width: 42px; height: 42px;
+      background: rgba(226,185,111,0.1);
+      border: 1px solid rgba(226,185,111,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .achievement-content strong { display: block; font-size: 0.95rem; color: var(--text); margin-bottom: 4px; }
+    .achievement-content span { font-size: 0.8rem; color: var(--gold); }
+    .achievement-content p { font-size: 0.88rem; color: var(--muted); margin-top: 6px; }
+
+    /* ── EDUCATION ── */
+    .edu-header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+
+    .edu-institution a {
+      font-weight: 700; font-size: 1rem;
+      color: var(--accent);
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+
+    .edu-institution a:hover { opacity: 0.75; text-decoration: underline; }
+
+    .edu-degree { font-size: 0.9rem; color: var(--muted); font-style: italic; margin-bottom: 10px; }
+
+    .cgpa-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(79,156,249,0.1);
+      border: 1px solid rgba(79,156,249,0.25);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.82rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* ── CONNECT ── */
+    #connect .card { text-align: center; }
+
+    .connect-subtitle { color: var(--muted); font-size: 0.88rem; margin-bottom: 28px; }
+
+    .connect-icons { display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; }
+
+    .connect-link {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      text-decoration: none;
+      transition: transform 0.25s;
+    }
+
+    .connect-link:hover { transform: translateY(-5px); }
+
+    .connect-link .icon-wrap {
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      transition: box-shadow 0.25s;
+    }
+
+    .connect-link:hover .icon-wrap { box-shadow: 0 6px 20px rgba(79,156,249,0.25); }
+
+    .connect-link span {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .li-wrap   { background: rgba(0,119,181,0.15);  border: 1px solid rgba(0,119,181,0.35); }
+    .gh-wrap   { background: rgba(200,200,200,0.1); border: 1px solid rgba(200,200,200,0.2); }
+    .mail-wrap { background: rgba(234,67,53,0.12);  border: 1px solid rgba(234,67,53,0.3); }
+    .ph-wrap   { background: rgba(52,199,89,0.12);  border: 1px solid rgba(52,199,89,0.3); }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      border-top: 1px solid var(--border);
+      position: relative;
+      z-index: 10;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .job-header, .edu-header { flex-direction: column; }
+      .skill-label { min-width: 100%; }
+      .project-header { flex-direction: column; }
+    }
+
+    /* ── PERSPECTIVE WRAPPER for 3D depth on sections ── */
+    main {
+      perspective: 1200px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ 3D ANIMATED BACKGROUND CANVAS ══ -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- ══ HEADER (STATIC — no scroll animation) ══ -->
+<header>
+  <svg class="header-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="8" y="20" width="48" height="34" rx="6" fill="none" stroke="#4f9cf9" stroke-width="2.5"/>
+    <path d="M22 20V15a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5" stroke="#4f9cf9" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M8 36h48" stroke="#7b5ea7" stroke-width="2" stroke-dasharray="4 3"/>
+    <circle cx="32" cy="36" r="3" fill="#4f9cf9"/>
+    <path d="M24 44 l4-4 -4-4" stroke="#e2b96f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M40 44 l-4-4 4-4"  stroke="#e2b96f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <h1>Welcome to Venkatesh Portfolio</h1>
+  <p class="tagline">Full Stack Developer &nbsp;·&nbsp; Mechanical → IT Transition</p>
+</header>
+
+<!-- ══ STICKY NAV ══ -->
+<nav>
+  <ul>
+    <li><a href="#objective">Objective</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#internship">Internship</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#achievements">Achievements</a></li>
+    <li><a href="#education">Education</a></li>
+    <li><a href="#connect">Connect</a></li>
+  </ul>
+</nav>
+
+<!-- ══ MAIN ══ -->
+<main>
+
+  <!-- OBJECTIVE -->
+  <section id="objective" class="reveal-section">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="9" stroke="#4f9cf9" stroke-width="1.8"/>
+        <circle cx="12" cy="12" r="4" stroke="#4f9cf9" stroke-width="1.8"/>
+        <circle cx="12" cy="12" r="1" fill="#4f9cf9"/>
+      </svg>
+      Objective
+    </h2>
+    <div class="card">
+      <p>
+        Motivated and detail-oriented Mechanical Engineering graduate with a strong interest in transitioning into the IT industry.
+        Possessing a solid foundation in analytical thinking, problem-solving, and logical reasoning, developed through academic
+        coursework and technical exposure.
+      </p>
+    </div>
+  </section>
+
+  <!-- SKILLS -->
+  <section id="skills" class="reveal-section">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none">
+        <polyline points="16 18 22 12 16 6" stroke="#4f9cf9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="8 6 2 12 8 18"    stroke="#4f9cf9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Skills
+    </h2>
+    <div class="skills-grid">
+      <div class="skill-row">
+        <span class="skill-label">Programming Languages</span>
+        <div class="skill-tags">
+          <span class="tag">Java 8</span>
+          <span class="tag">Java 17</span>
+        </div>
+      </div>
+      <div class="skill-row">
+        <span class="skill-label">Frontend Technologies</span>
+        <div class="skill-tags">
+          <span class="tag">HTML5</span>
+          <span class="tag">CSS3</span>
+          <span class="tag">JavaScript</span>
+          <span class="tag">React</span>
+          <span class="tag">React Native</span>
+        </div>
+      </div>
+      <div class="skill-row">
+        <span class="skill-label">Backend Technologies</span>
+        <div class="skill-tags">
+          <span class="tag">Spring Boot</span>
+          <span class="tag">RESTful APIs</span>
+          <span class="tag">JWT Auth</span>
+          <span class="tag">Apache Tomcat</span>
+        </div>
+      </div>
+      <div class="skill-row">
+        <span class="skill-label">Database</span>
+        <div class="skill-tags">
+          <span class="tag">MySQL</span>
+          <span class="tag">JPA/Hibernate</span>
+          <span class="tag">JDBC</span>
+        </div>
+      </div>
+      <div class="skill-row">
+        <span class="skill-label">Core Concepts</span>
+        <div class="skill-tags">
+          <span class="tag">OOP</span>
+          <span class="tag">MVC Design Pattern</span>
+          <span class="tag">Data Structures & Algorithms</span>
+          <span class="tag">MySQL Fundamentals</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERNSHIP -->
+  <section id="internship" class="reveal-section">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none">
+        <rect x="2" y="7" width="20" height="14" rx="3" stroke="#4f9cf9" stroke-width="1.8"/>
+        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" stroke="#4f9cf9" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="12" y1="12" x2="12" y2="16" stroke="#4f9cf9" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="10" y1="14" x2="14" y2="14" stroke="#4f9cf9" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      Internship
+    </h2>
+    <div class="card">
+      <div class="job-header">
+        <div class="job-company">
+          <a href="https://thetapacademy.com/" target="_blank" rel="noopener noreferrer">TAP Academy</a>
+        </div>
+        <div class="badge">March 2026 – Pursuing</div>
+      </div>
+      <div class="job-meta">
+        <span class="job-title">Full Stack Java Web Development Trainee</span>
+        <span class="badge">Bengaluru, Karnataka</span>
+      </div>
+      <ul class="bullet-list">
+        <li>Currently undergoing intensive training in Full Stack Java Web Development, gaining hands-on exposure to both front-end and back-end technologies under industry-aligned curriculum.</li>
+        <li>Building proficiency in Core Java, Advanced Java (Servlets, JSP), and Spring Boot framework for developing scalable enterprise-grade web applications.</li>
+        <li>Developing front-end skills using HTML, CSS, and JavaScript to design responsive and user-friendly web interfaces integrated with Java back-end services.</li>
+        <li>Working with MySQL for relational database design, writing optimized queries, and connecting databases to Java applications using JDBC and JPA/Hibernate.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects" class="reveal-section">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="#4f9cf9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M2 17l10 5 10-5"            stroke="#4f9cf9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M2 12l10 5 10-5"            stroke="#4f9cf9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Projects
+    </h2>
+
+    <!-- PROJECT 1: BikeXpress (Web App) -->
+    <div class="project-card">
+      <div class="project-header">
+        <div>
+          <p class="project-title">BikeXpress — Full Stack Online Bike Purchasing Application</p>
+          <p class="project-subtitle">Full Stack Web Application</p>
+        </div>
+        <span class="project-number">Project 01</span>
+      </div>
+      <div class="project-tech-tags">
+        <span class="tech-tag">React</span>
+        <span class="tech-tag">Spring Boot</span>
+        <span class="tech-tag">MySQL</span>
+        <span class="tech-tag">JWT Auth</span>
+        <span class="tech-tag">JPA/Hibernate</span>
+        <span class="tech-tag">REST API</span>
+        <span class="tech-tag">Apache Tomcat</span>
+        <span class="tech-tag">MVC</span>
+      </div>
+      <ul class="bullet-list">
+        <li>Designed and developed a responsive frontend using HTML5, CSS3, and JavaScript with React, featuring a bike catalog with category filtering (sports, cruiser, electric), search functionality, and dynamic product detail pages.</li>
+        <li>Built RESTful APIs using Java Spring Boot for managing bike inventory, user authentication (JWT-based login/register), and order processing, ensuring a scalable and secure back-end architecture.</li>
+        <li>Integrated MySQL database with JPA/Hibernate ORM to store and manage bike listings, user profiles, and order records; implemented optimized queries for real-time stock availability checks.</li>
+        <li>Implemented a multi-step booking workflow including bike selection, EMI calculator, test-ride scheduling, and order confirmation with PDF invoice generation for an end-to-end user experience.</li>
+        <li>Deployed the application using Apache Tomcat server; applied OOP principles, MVC design pattern, and conducted unit testing to ensure application reliability and code maintainability.</li>
+      </ul>
+    </div>
+
+    <!-- PROJECT 2: Hemp Fiber Research (Major Project) -->
+    <div class="project-card">
+      <div class="project-header">
+        <div>
+          <p class="project-title">Analyzing The Characterizations of Hemp Fiber with Epoxy Resin using Granite Powder as Filler</p>
+          <p class="project-subtitle">Major Academic Research Project</p>
+        </div>
+        <span class="project-number">Project 02</span>
+      </div>
+      <div class="project-tech-tags">
+        <span class="tech-tag">Composite Materials</span>
+        <span class="tech-tag">SEM Analysis</span>
+        <span class="tech-tag">TGA</span>
+        <span class="tech-tag">FTIR</span>
+        <span class="tech-tag">Hand Layup</span>
+      </div>
+      <ul class="bullet-list">
+        <li>The hemp fiber was fabricated with hand layup technique, and treated with sodium hydroxide (NaOH).</li>
+        <li>Made a different weight of mold (5%, 10%, 15%, 20%) for testing and analyzing the mechanical properties.</li>
+        <li>Conducted various tests like Scanning Electron Microscope (SEM), Thermo Gravimetric Analysis (TGA), Fourier Transforms Infrared Spectroscopy (FTIR).</li>
+        <li>Achieved good results in characterization of composite mechanical properties.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ACHIEVEMENTS -->
+  <section id="achievements" class="reveal-section">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="8" r="6" stroke="#4f9cf9" stroke-width="1.8"/>
+        <path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12" stroke="#4f9cf9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Achievements
+    </h2>
+    <div class="card">
+      <div class="achievement-item">
+        <div class="achievement-badge">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#e2b96f" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="9" cy="7" r="4" stroke="#e2b96f" stroke-width="1.8"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="#e2b96f" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="#e2b96f" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="achievement-content">
+          <strong>Volunteer Certificate</strong>
+          <span>G. Pulla Reddy Engineering College</span>
+          <p>Secured a Volunteer Certificate for actively contributing to the successful organization and coordination of a college-level technical event, demonstrating strong teamwork and event management skills.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EDUCATION -->
+  <section id="education" class="reveal-section">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none">
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z" stroke="#4f9cf9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M6 12v5c3.33 1.67 8.67 1.67 12 0v-5" stroke="#4f9cf9" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      Education
+    </h2>
+    <div class="card">
+      <div class="edu-header">
+        <div class="edu-institution">
+          <a href="https://www.gprec.ac.in" target="_blank" rel="noopener noreferrer">G. Pulla Reddy Engineering College (Autonomous)</a>
+        </div>
+        <span class="badge">2022 – 2026</span>
+      </div>
+      <p class="edu-degree">Bachelor of Technology (B.Tech) – Mechanical Engineering</p>
+      <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; color:var(--muted); font-size:0.88rem;">
+        <span class="cgpa-pill">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" stroke="#4f9cf9" stroke-width="2" fill="#4f9cf9"/></svg>
+          CGPA 7.3
+        </span>
+        <span>Kurnool, Andhra Pradesh, India</span>
+      </div>
+      <p style="margin-top:10px; color:var(--muted); font-size:0.88rem;">Graduated in Mechanical Engineering with strong analytical and problem-solving fundamentals.</p>
+    </div>
+  </section>
+
+  <!-- CONNECT -->
+  <section id="connect" class="reveal-section">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#4f9cf9" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="9" cy="7" r="4" stroke="#4f9cf9" stroke-width="1.8"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="#4f9cf9" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      Connect with Me
+    </h2>
+    <div class="card">
+      <p class="connect-subtitle">Feel free to reach out — I'm open to opportunities and collaborations.</p>
+      <div class="connect-icons">
+
+        <!-- LinkedIn -->
+        <a class="connect-link" href="https://www.linkedin.com/in/venkatesh-machani" target="_blank" rel="noopener noreferrer">
+          <div class="icon-wrap li-wrap">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+              <rect width="24" height="24" rx="4" fill="#0077B5"/>
+              <path d="M7.5 9.5H5V19H7.5V9.5Z" fill="white"/>
+              <circle cx="6.25" cy="6.75" r="1.5" fill="white"/>
+              <path d="M19 13.5c0-2.2-1.1-4-3.25-4C14.5 9.5 13.5 10.5 13 11.2V9.5H10.5V19H13v-5c0-1.1.5-2 1.75-2S17 13 17 14.2V19H19v-5.5z" fill="white"/>
+            </svg>
+          </div>
+          <span>LinkedIn</span>
+        </a>
+
+        <!-- GitHub -->
+        <a class="connect-link" href="https://github.com/Venkatesh-Machani" target="_blank" rel="noopener noreferrer">
+          <div class="icon-wrap gh-wrap">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+              <path fill-rule="evenodd" clip-rule="evenodd"
+                d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482
+                   0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.34-3.369-1.34-.454-1.155-1.11-1.463-1.11-1.463
+                   -.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832
+                   .092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683
+                   -.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836
+                   c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647
+                   .64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852
+                   0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12
+                   c0-5.523-4.477-10-10-10z"
+                fill="#e8eaf0"/>
+            </svg>
+          </div>
+          <span>GitHub</span>
+        </a>
+
+        <!-- Email -->
+        <a class="connect-link" href="mailto:machanivenkatesh100@gmail.com" target="_blank" rel="noopener noreferrer">
+          <div class="icon-wrap mail-wrap">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+              <rect width="24" height="24" rx="4" fill="#fff"/>
+              <path d="M2 8.5V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8.5L12 15 2 8.5z" fill="#EA4335"/>
+              <path d="M2 8.5L12 15l10-6.5V6.5A2 2 0 0 0 20 5H4a2 2 0 0 0-2 1.5z" fill="#FBBC05"/>
+              <path d="M2 8.5V18a2 2 0 0 0 2 2h2V10L2 8.5z" fill="#34A853"/>
+              <path d="M20 10v10h2a2 2 0 0 0 2-2V8.5L20 10z" fill="#4285F4"/>
+            </svg>
+          </div>
+          <span>Email</span>
+        </a>
+
+        <!-- Phone -->
+        <a class="connect-link" href="tel:+919133188671">
+          <div class="icon-wrap ph-wrap">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <rect width="24" height="24" rx="4" fill="#34c759" fill-opacity="0.15"/>
+              <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" fill="#34c759"/>
+            </svg>
+          </div>
+          <span>Phone</span>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>© 2026 Venkatesh Machani &nbsp;·&nbsp; Crafted with passion &amp; code.</p>
+</footer>
+
+<!-- ══ 3D PARTICLE NETWORK BACKGROUND ══ -->
+<script>
+(function() {
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+
+  let W, H, particles, mouse = { x: -9999, y: -9999 };
+  const PARTICLE_COUNT = 110;
+  const MAX_DEPTH = 5;
+  const CONNECTION_DIST = 160;
+  const MOUSE_REPEL_DIST = 120;
+
+  const COLORS = [
+    { r: 79,  g: 156, b: 249 },   // --accent blue
+    { r: 123, g: 94,  b: 167 },   // --accent2 purple
+    { r: 226, g: 185, b: 111 },   // --gold
+  ];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function randBetween(a, b) { return a + Math.random() * (b - a); }
+
+  function createParticle() {
+    const col = COLORS[Math.floor(Math.random() * COLORS.length)];
+    const z   = randBetween(0.5, MAX_DEPTH);
+    return {
+      x:  randBetween(0, W),
+      y:  randBetween(0, H),
+      z,
+      vx: randBetween(-0.18, 0.18),
+      vy: randBetween(-0.12, 0.12),
+      vz: randBetween(-0.004, 0.004),
+      r:  col.r, g: col.g, b: col.b,
+      baseR: randBetween(1.5, 3.5),
+      pulse: Math.random() * Math.PI * 2,
+    };
+  }
+
+  function initParticles() {
+    particles = Array.from({ length: PARTICLE_COUNT }, createParticle);
+  }
+
+  function project(p) {
+    // Simple perspective projection — deeper = smaller & closer to center
+    const fov   = 400;
+    const scale = fov / (fov + p.z * 60);
+    const px    = (p.x - W / 2) * scale + W / 2;
+    const py    = (p.y - H / 2) * scale + H / 2;
+    return { px, py, scale };
+  }
+
+  function drawFrame() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Subtle dark vignette to blend with page bg
+    const grad = ctx.createRadialGradient(W/2, H/2, H*0.1, W/2, H/2, H*0.85);
+    grad.addColorStop(0, 'rgba(13,15,20,0)');
+    grad.addColorStop(1, 'rgba(13,15,20,0.7)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    const now = Date.now() * 0.001;
+
+    // Update & draw particles
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+
+      // Animate z-depth gently (gives forward/backward drift feel)
+      p.z  += p.vz;
+      if (p.z < 0.3 || p.z > MAX_DEPTH) p.vz *= -1;
+
+      p.x  += p.vx * (1 / p.z * 0.8);
+      p.y  += p.vy * (1 / p.z * 0.8);
+
+      // Mouse repel
+      const { px, py, scale } = project(p);
+      const dx = px - mouse.x, dy = py - mouse.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < MOUSE_REPEL_DIST) {
+        const force = (MOUSE_REPEL_DIST - dist) / MOUSE_REPEL_DIST * 0.6;
+        p.x += (dx / dist) * force * 1.2;
+        p.y += (dy / dist) * force * 1.2;
+      }
+
+      // Wrap
+      if (p.x < -50)  p.x = W + 50;
+      if (p.x > W+50) p.x = -50;
+      if (p.y < -50)  p.y = H + 50;
+      if (p.y > H+50) p.y = -50;
+
+      // Draw connections
+      for (let j = i + 1; j < particles.length; j++) {
+        const q = particles[j];
+        const { px: qx, py: qy } = project(q);
+        const ddx = px - qx, ddy = py - qy;
+        const d = Math.sqrt(ddx * ddx + ddy * ddy);
+        if (d < CONNECTION_DIST) {
+          const avgScale = (scale + (400 / (400 + q.z * 60))) / 2;
+          const alpha = (1 - d / CONNECTION_DIST) * 0.35 * avgScale;
+          // Blend colors
+          const rr = Math.round((p.r + q.r) / 2);
+          const gg = Math.round((p.g + q.g) / 2);
+          const bb = Math.round((p.b + q.b) / 2);
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.lineTo(qx, qy);
+          ctx.strokeStyle = `rgba(${rr},${gg},${bb},${alpha})`;
+          ctx.lineWidth   = avgScale * 0.8;
+          ctx.stroke();
+        }
+      }
+
+      // Draw particle dot
+      p.pulse += 0.025;
+      const pulseR = p.baseR * scale * (1 + 0.15 * Math.sin(p.pulse + now));
+      const alpha  = Math.min(1, scale * 0.9);
+      const glow   = ctx.createRadialGradient(px, py, 0, px, py, pulseR * 3.5);
+      glow.addColorStop(0, `rgba(${p.r},${p.g},${p.b},${alpha})`);
+      glow.addColorStop(1, `rgba(${p.r},${p.g},${p.b},0)`);
+      ctx.beginPath();
+      ctx.arc(px, py, pulseR * 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = glow;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(px, py, pulseR, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${alpha})`;
+      ctx.fill();
+    }
+
+    requestAnimationFrame(drawFrame);
+  }
+
+  window.addEventListener('resize', () => { resize(); });
+  window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+  window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+
+  resize();
+  initParticles();
+  drawFrame();
+})();
+</script>
+
+<!-- ══ SCROLL REVEAL — sections slide in from front, old ones push back ══ -->
+<script>
+(function() {
+  const sections = document.querySelectorAll('.reveal-section');
+
+  // Track which sections have been seen
+  const seen = new Set();
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const el = entry.target;
+
+      if (entry.isIntersecting) {
+        // Coming into view — slide in from front
+        el.classList.remove('exit-back');
+        el.classList.add('in-view');
+        seen.add(el);
+      } else if (seen.has(el)) {
+        // Already seen and now leaving — push back
+        el.classList.remove('in-view');
+        el.classList.add('exit-back');
+        // Reset after transition so it can animate back in if scrolled back
+        setTimeout(() => {
+          if (!el.classList.contains('in-view')) {
+            el.classList.remove('exit-back');
+          }
+        }, 500);
+      }
+    });
+  }, {
+    threshold: 0.12,
+    rootMargin: '0px 0px -5% 0px'
+  });
+
+  sections.forEach(s => io.observe(s));
+})();
+</script>
+
+</body>
+</html>
